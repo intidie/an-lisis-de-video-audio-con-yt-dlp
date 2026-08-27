@@ -1,0 +1,16 @@
+# Entornos virtuales
+.venv/
+env/
+
+# Carpetas de archivos temporales
+temp_descargas/
+
+# Archivos ejecutables que no deben subirse
+ffmpeg.exe
+
+# Caché interno de Python
+__pycache__/
+*.pyc
+# Carpetas de descargas y temporales
+temp_descargas/
+descargas/
