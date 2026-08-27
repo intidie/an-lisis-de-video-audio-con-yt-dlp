@@ -6,7 +6,7 @@ import re
 
 st.set_page_config(page_title="Gestor de Descargas yt-dlp", page_icon="🎥", layout="centered")
 
-st.title("🎥 Gestor Avanzado yt-dlp (Optimizado)")
+st.title("🎥 Gestor Avanzado yt-dlp (Multiformato)")
 
 # Carpeta temporal
 TEMP_DIR = "temp_descargas"
@@ -45,22 +45,23 @@ if st.button("🚀 Iniciar Descarga", type="primary"):
             # 'ffmpeg_location': 'C:/ruta/exacta/hacia/la/carpeta/bin', # Usa esto si ffmpeg.exe no está en esta carpeta
         }
 
-        # 🔥 OPTIMIZACIÓN DE VELOCIDAD AQUÍ 🔥
+        # 🔥 CONFIGURACIÓN FLEXIBLE MULTIFORMATO 🔥
         if tipo_descarga == "Solo Audio":
             ydl_opts['format'] = 'bestaudio/best'
             ydl_opts['postprocessors'] = [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': formato_audio,
-                # Se eliminó la recodificación forzada de calidad para hacerlo más rápido
+                'preferredquality': '192',
             }]
         else:
-            # Forzamos MP4 y M4A desde el servidor. FFmpeg solo los unirá en 2 segundos sin recodificar.
+            # Selecciona el mejor video y el mejor audio sin importar su formato original (.webm, .mp4, etc.)
             if resolucion == "Mejor":
-                ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+                ydl_opts['format'] = 'bestvideo+bestaudio/best'
             else:
-                ydl_opts['format'] = f'bestvideo[ext=mp4][height<={resolucion}]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+                ydl_opts['format'] = f'bestvideo[height<={resolucion}]+bestaudio/best'
             
-            # Se eliminó el convertidor de video (FFmpegVideoConvertor) porque ya no es necesario
+            # Le indicamos a FFmpeg que, sin importar lo que descargue, lo empaquete en MP4 de forma rápida (muxing)
+            ydl_opts['merge_output_format'] = 'mp4'
 
         with st.status("Iniciando...", expanded=True) as status:
             progress_bar = st.progress(0.0)
@@ -76,7 +77,7 @@ if st.button("🚀 Iniciar Descarga", type="primary"):
                     status.update(label=f"⬇️ Descargando: {d.get('_percent_str', '')} (Velocidad: {d.get('_speed_str', '')})", state="running")
                 elif d['status'] == 'finished':
                     progress_bar.progress(1.0)
-                    status.update(label="✅ Descarga completada. Uniendo pistas (fase rápida)...", state="running")
+                    status.update(label="✅ Descarga completada. Empaquetando en MP4 (rápido)...", state="running")
 
             def post_hook(d):
                 if d['status'] == 'started':
