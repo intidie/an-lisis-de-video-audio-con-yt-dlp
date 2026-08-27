@@ -43,8 +43,16 @@ if st.button("🚀 Iniciar Descarga", type="primary"):
             'no_warnings': True,
             'color': 'no_color',
             # 'ffmpeg_location': 'C:/ruta/exacta/hacia/la/carpeta/bin', # Usa esto si ffmpeg.exe no está en esta carpeta
-        
-            'extractor_args': {'youtube': ['client=tv,android']},
+# 1. Combina múltiples clientes móviles para despistar
+            'extractor_args': {'youtube': ['client=ios,android,tv']},
+            # 2. Ignora verificaciones de certificados que delatan al servidor
+            'nocheckcertificate': True,
+            # 3. Fuerza el salto de restricciones geográficas
+            'geo_bypass': True,
+            # 4. Se disfraza de un navegador Google Chrome normal en Windows
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+            }
         }
 
         # 🔥 CONFIGURACIÓN FLEXIBLE MULTIFORMATO 🔥
