@@ -43,6 +43,8 @@ if st.button("🚀 Iniciar Descarga", type="primary"):
             'no_warnings': True,
             'color': 'no_color',
             # 'ffmpeg_location': 'C:/ruta/exacta/hacia/la/carpeta/bin', # Usa esto si ffmpeg.exe no está en esta carpeta
+        
+            'extractor_args': {'youtube': ['client=tv,android']},
         }
 
         # 🔥 CONFIGURACIÓN FLEXIBLE MULTIFORMATO 🔥
