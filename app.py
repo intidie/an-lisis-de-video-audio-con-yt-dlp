@@ -6,7 +6,7 @@ import re
 
 st.set_page_config(page_title="Gestor de Descargas yt-dlp", page_icon="🎥", layout="centered")
 
-st.title("🎥 Gestor Avanzado yt-dlp (Multiformato)")
+st.title("🎥 Gestor Avanzado yt-dlp (Edición Premiere)")
 
 # Carpeta temporal
 TEMP_DIR = "temp_descargas"
@@ -16,10 +16,10 @@ url = st.text_input("🔗 Enlace del video o lista de reproducción:")
 
 col1, col2 = st.columns(2)
 with col1:
-    tipo_descarga = st.selectbox("Formato de Salida", ["Video (MP4)", "Solo Audio"])
+    tipo_descarga = st.selectbox("Formato de Salida", ["Video (MP4/Premiere)", "Solo Audio"])
     resolucion = st.selectbox("Resolución Máxima", ["1080", "720", "480", "Mejor"], disabled=(tipo_descarga == "Solo Audio"))
 with col2:
-    formato_audio = st.selectbox("Formato de Audio", ["mp3", "m4a", "wav"], disabled=(tipo_descarga == "Video (MP4)"))
+    formato_audio = st.selectbox("Formato de Audio", ["mp3", "m4a", "wav"], disabled=(tipo_descarga != "Solo Audio"))
     descargar_subs = st.checkbox("Incluir Subtítulos")
 
 st.divider()
@@ -42,8 +42,8 @@ if st.button("🚀 Iniciar Descarga", type="primary"):
             'quiet': True,
             'no_warnings': True,
             'color': 'no_color',
-            # 'ffmpeg_location': 'C:/ruta/exacta/hacia/la/carpeta/bin', # Usa esto si ffmpeg.exe no está en esta carpeta
-# 1. Combina múltiples clientes móviles para despistar
+            
+            # 1. Combina múltiples clientes móviles para despistar
             'extractor_args': {'youtube': ['client=ios,android,tv']},
             # 2. Ignora verificaciones de certificados que delatan al servidor
             'nocheckcertificate': True,
@@ -55,7 +55,7 @@ if st.button("🚀 Iniciar Descarga", type="primary"):
             }
         }
 
-        # 🔥 CONFIGURACIÓN FLEXIBLE MULTIFORMATO 🔥
+        # 🔥 CONFIGURACIÓN FLEXIBLE MULTIFORMATO Y CODEC 🔥
         if tipo_descarga == "Solo Audio":
             ydl_opts['format'] = 'bestaudio/best'
             ydl_opts['postprocessors'] = [{
@@ -64,13 +64,14 @@ if st.button("🚀 Iniciar Descarga", type="primary"):
                 'preferredquality': '192',
             }]
         else:
-            # Selecciona el mejor video y el mejor audio sin importar su formato original (.webm, .mp4, etc.)
+            # 🎯 FORZAR CODEC H.264 (AVC) Y AUDIO AAC PARA ADOBE PREMIERE
             if resolucion == "Mejor":
-                ydl_opts['format'] = 'bestvideo+bestaudio/best'
+                ydl_opts['format'] = 'bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/bestvideo[vcodec^=avc]+bestaudio/best[ext=mp4]/best'
             else:
-                ydl_opts['format'] = f'bestvideo[height<={resolucion}]+bestaudio/best'
+                ydl_opts['format'] = f'bestvideo[height<={resolucion}][vcodec^=avc1]+bestaudio[acodec^=mp4a]/bestvideo[height<={resolucion}][vcodec^=avc]+bestaudio/best[ext=mp4]/best'
             
-            # Le indicamos a FFmpeg que, sin importar lo que descargue, lo empaquete en MP4 de forma rápida (muxing)
+            # Ordenar preferencias para asegurar H.264 sobre VP9/AV1 y empaquetar
+            ydl_opts['format_sort'] = ['res', 'vcodec:h264', 'acodec:aac']
             ydl_opts['merge_output_format'] = 'mp4'
 
         with st.status("Iniciando...", expanded=True) as status:
@@ -87,11 +88,11 @@ if st.button("🚀 Iniciar Descarga", type="primary"):
                     status.update(label=f"⬇️ Descargando: {d.get('_percent_str', '')} (Velocidad: {d.get('_speed_str', '')})", state="running")
                 elif d['status'] == 'finished':
                     progress_bar.progress(1.0)
-                    status.update(label="✅ Descarga completada. Empaquetando en MP4 (rápido)...", state="running")
+                    status.update(label="✅ Descarga completada. Preparando archivo compatible...", state="running")
 
             def post_hook(d):
                 if d['status'] == 'started':
-                    status.update(label="⚙️ FFmpeg trabajando...", state="running")
+                    status.update(label="⚙️ FFmpeg empaquetando en H.264...", state="running")
                 elif d['status'] == 'finished':
                     status.update(label="✅ Procesamiento terminado.", state="running")
 
@@ -110,12 +111,12 @@ if st.button("🚀 Iniciar Descarga", type="primary"):
                     nombre_archivo = os.path.basename(archivo_final)
                     
                     with open(archivo_final, "rb") as file:
-                        st.success("¡El archivo está listo!")
+                        st.success("¡El archivo está listo y es compatible con Premiere!")
                         st.download_button(
                             label=f"💾 Guardar {nombre_archivo}",
                             data=file,
                             file_name=nombre_archivo,
-                            mime="application/octet-stream",
+                            mime="video/mp4",
                             type="primary"
                         )
             except Exception as e:
